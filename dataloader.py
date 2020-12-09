@@ -22,13 +22,28 @@ class TrainDataset(Dataset):
         
         
     def __getitem__(self, idx):
-        
-        return self.pd_data[self.feature_cols], self.pd_data[self.target_column]
+
+        feature = self.pd_data[self.feature_cols].iloc[idx].to_list()
+        target = self.pd_data[self.target_column].iloc[idx]
+
+        return np.array(feature), target
     
     def __len__(self):
 
         return len(self.pd_data)
 
+    def get_field_dims(self):
+
+        dims = []
+
+        for col_name in self.feature_cols:
+            dims.append(len(self.pd_data[col_name].unique()))
+            
+        print (dims)
+
+        return dims
+
+        
     @classmethod
     def get_from_one_file(cls, data_path, train_flag = '9 10'):
         
@@ -36,7 +51,7 @@ class TrainDataset(Dataset):
         
         val_flags = [int(number) for number in train_flag.split(' ')]
         train_data = pd_data[pd_data.flag]
-
+        
         
 def get_args():
 
@@ -53,8 +68,8 @@ def get_args():
 
 if __name__ == '__main__':
 
-    pd_data = pd.read_csv('../csv_data/gaw_banner_train.csv')
+    pd_data = pd.read_csv('./out.csv')
     dataset = TrainDataset(pd_data)
 
-    print (len(dataset.feature_cols))
+    dataset.get_field_dims()
     
