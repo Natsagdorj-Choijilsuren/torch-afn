@@ -32,15 +32,21 @@ def train_one_epoch(model, loader, criterion, device, optimizer):
     model.to(device)
     
     for i, (fields, targets) in enumerate(loader):
-        
+
         fields, targets = fields.to(device), targets.to(device)
         y = model(fields)
         
         loss = criterion(y, targets.float())
+        if i% 100 == 0:
 
+            print (loss)
+            
         model.zero_grad()
         loss.backward()
         optimizer.step()
+
+        if i % 1000 == 0:
+            torch.save(model.state_dict(), './model_inside.pth')
 
         
 def validate_model(model, loader, device):
@@ -55,8 +61,8 @@ def validate_model(model, loader, device):
         fields, targets = fields.to(device), targets.to(device)
         y = model(fields)
 
-        x_list.extends(y.to_list())
-        y_list.extends(targets.to_list())
+        x_list.extend(y.tolist())
+        y_list.extend(targets.tolist())
         
     x_list = np.array(x_list)
     y_list = np.array(y_list)
@@ -95,4 +101,4 @@ if __name__ == '__main__':
         train_one_epoch(model, train_loader, criterion, device, optimizer)
         validate_model(model, val_loader, device)
 
-    torch.save(model.state_dict(), 'model.pth')
+        torch.save(model.state_dict(), 'model.pth')
