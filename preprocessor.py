@@ -64,10 +64,24 @@ class Processor:
         labels = np.arange(bins_size)
 
         return bins, labels
+    
+    @staticmethod
+    def get_label_preprocess(ctr_percent):
 
+        #sigmoid function is (0, 1)
+        out = ctr_percent + 0.0005
+        out = np.log(out)
+
+        min_num = -7.600902459542082
+        max_num = 4.605175185975591
+
+        out_scaled = (out - min_num)/(max_num - min_num)
+        return out_scaled
+        
+        
     def get_label(self):
 
-        self.out_data['ctr'] = self.input_data['ctr']/100.0
+        self.out_data['ctr'] = self.input_data['ctr'].apply(Processor.get_label_preprocess)
         self.out_data['flag'] = self.input_data['flag']
         
     def make_out_dafaframe(self):
