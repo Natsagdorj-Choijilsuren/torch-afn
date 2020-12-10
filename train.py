@@ -14,7 +14,7 @@ def get_args():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--input_csv', type=str, default='./out.csv')
-    parser.add_argument('--batch_size', type=int, default=20)
+    parser.add_argument('--batch_size', type=int, default=100)
 
     parser.add_argument('--embed_dims', type=int, default=16)
     parser.add_argument('--LNN_dim', type=int, default=1500)
@@ -51,7 +51,8 @@ def validate_model(model, loader, device):
     y_list, x_list = list(), list()
     
     for i, (fields, targets) in enumerate(loader):
-        
+
+        fields, targets = fields.to(device), targets.to(device)
         y = model(fields)
 
         x_list.extends(y.to_list())
@@ -93,4 +94,5 @@ if __name__ == '__main__':
     for _ in range(args.epochs):
         train_one_epoch(model, train_loader, criterion, device, optimizer)
         validate_model(model, val_loader, device)
-        
+
+    torch.save(model.state_dict(), 'model.pth')
