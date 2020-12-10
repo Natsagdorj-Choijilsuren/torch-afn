@@ -19,11 +19,22 @@ def get_args():
 
     parser.add_argument('--input_csv', type=str, default='./test.csv')
     parser.add_argument('--save_path', type=str, default='result.csv')
-    parser.add_argument('--load_path', type=str, default='')
+    parser.add_argument('--load_path', type=str, default='./model_inside.pth')
     
     args = parser.parse_args()
 
     return args
+
+
+def unscale(output):
+    
+    min_num = -7.600902459542082
+    max_num = 4.605175185975591
+
+    output = output*(max_num - min_num)    
+    output = np.exp(output)
+
+    return output - 0.0005
 
 
 def test_model(model, loader, device):
@@ -42,8 +53,9 @@ def test_model(model, loader, device):
             y = y.squeeze(0)
 
             ret = y.cpu().numpy()
+            ret = unscale(ret)
             results.append(ret)
-
+            
     out_csv['value'] = results
 
     return out_csv
@@ -72,12 +84,13 @@ def load_data(pd_path):
             
 if __name__ == '__main__':
 
-    loader = load_data('./test.csv')
+    args = get_args()
+    loader = load_data(args.input_csv)
     
     field_dims = [49, 50, 50, 7, 8, 20, 20, 20, 20, 20, 20, 20, 50, 50, 20, 20, 10, 10, 5, 3, 3, 5]
     model = AdaptiveFactorizationNetwork(field_dims=field_dims, embed_dim=16, LNN_dim=1500,
                                          mlp_dims=(400, 400, 400), dropouts=(0, 0, 0))
-
+    
     model.load_state_dict(torch.load(args.load_path))
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
