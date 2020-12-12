@@ -14,9 +14,10 @@ class Processor:
 
         self.field_dict = {}
         self.feature_dict = {}
-
-        #CATEGORICAL AND NUMERICAL VALUES
         
+        #CATEGORICAL AND NUMERICAL VALUES
+
+        #TO DO ADD important features 
         self.numerical_cols = ['cnt_date', 'geo_tokyo', 'geo_osaka', 'width', 'height',
                                'age_range_undetermined', 'age_range_18_24', 'age_range_25_34', 'age_range_35_44',
                                'age_range_45_54', 'age_range_55_64', 'age_range_65_more', 'gender_male', 'gender_female',
@@ -32,10 +33,12 @@ class Processor:
                                'gender_male':50, 'gender_female':50, 'list_type_rule_based':20, 'list_type_logical':20,
                                'list_type_remarketing':10, 'list_type_similar':10, 'list_type_crm_based':5}
 
+        
     def numerical2categorical(self, col_name, bin_size):
         
         elements = self.input_data[col_name]
         bins, labels = Processor.get_bins(elements, bin_size)
+        #TO DO -- O should be in different class itself
         bins[0] = -1
         try:
             self.out_data[col_name] = pd.cut(self.input_data[col_name], bins, labels=labels)
@@ -57,6 +60,7 @@ class Processor:
 
         
     @staticmethod
+    #TO DO make 0 another class itself
     def get_bins(np_arr, bins_size):
 
         hist, bins = np.histogram(np_arr, bins=bins_size)
@@ -67,7 +71,7 @@ class Processor:
     
     @staticmethod
     def get_label_preprocess(ctr_percent):
-
+        #I think this method is good enough
         #sigmoid function is (0, 1)
         out = ctr_percent + 0.0005
         out = np.log(out)
@@ -77,8 +81,10 @@ class Processor:
 
         out_scaled = (out - min_num)/(max_num - min_num)
         return out_scaled
-        
-        
+
+
+    
+    
     def get_label(self):
 
         self.out_data['ctr'] = self.input_data['ctr'].apply(Processor.get_label_preprocess)
@@ -91,6 +97,10 @@ class Processor:
 
         for col_name in self.numerical_cols:
             self.numerical2categorical(col_name, self.numerical_bins[col_name])
+
+    def getIndex(self):
+        
+        self.out_data["idx"] = self.input_data["id"]
 
         
 if __name__ == '__main__':
@@ -108,6 +118,10 @@ if __name__ == '__main__':
     process.make_out_dafaframe()
     if args.mode == 'train':
         process.get_label()
+
+    else:
+        process.getIndex()
+        
     process.out_data.to_csv(args.save_path)
     
     

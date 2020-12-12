@@ -27,12 +27,12 @@ def get_args():
 
 
 def unscale(output):
-    
+
     min_num = -7.600902459542082
     max_num = 4.605175185975591
 
     output = output*(max_num - min_num)    
-    output = np.exp(output)
+    output = np.exp(output + min_num)
 
     return output - 0.0005
 
@@ -42,22 +42,28 @@ def test_model(model, loader, device):
     model.to(device)
     model.eval()
     
-    out_csv = pd.DataFrame()
-    results = []
+    #out_csv = pd.DataFrame(columns=["ids", "preds"])
+
+    row_list = []
     
-    for i, fields in enumerate(loader):
+    for i, (fields, idx) in enumerate(loader):
+
+        dict_row = {}
         
         fields = fields.to(device)
         with torch.no_grad():
             y = model(fields)
+
             y = y.squeeze(0)
-
             ret = y.cpu().numpy()
-            ret = unscale(ret)
-            results.append(ret)
-            
-    out_csv['value'] = results
 
+        ret = unscale(ret)
+        dict_row["ids"] = idx
+        dict_row["preds"] = ret
+
+        row_list.append(dict_row)
+        
+    out_csv = pd.DataFrame(row_list)
     return out_csv
     
             
@@ -70,18 +76,18 @@ def to_tensor(np_array):
 def load_data(pd_path):
 
     pd_data = pd.read_csv(pd_path)
-
+    
     for i, row in pd_data.iterrows():
-
+        
         feature = row[feature_cols].to_list()
         feature = np.array(feature)
         
         feature = to_tensor(feature)
+        index = row["idx"]
         
-        yield feature
-        
+        yield feature, index
 
-            
+        
 if __name__ == '__main__':
 
     args = get_args()
@@ -95,6 +101,6 @@ if __name__ == '__main__':
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     out_csv = test_model(model, loader, device)
-    out_csv.to_csv(args.save_path)
-    
+    out_csv.to_csv(args.save_path, index=False)
+
     
